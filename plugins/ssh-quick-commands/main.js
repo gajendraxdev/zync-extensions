@@ -1,11 +1,11 @@
 /**
  * SSH Quick Commands Plugin for Zync
  * Registers useful SSH utility commands into the command palette.
- * Uses the correct zync.commands.register(id, title, handler) API.
+ * When executed, sends the command directly to the active terminal.
  */
 
 (function () {
-    const commands = [
+    var commands = [
         { id: 'ssh-quick.uptime',   title: 'SSH: Show Uptime',           cmd: 'uptime\n' },
         { id: 'ssh-quick.disk',     title: 'SSH: Disk Usage (df -h)',     cmd: 'df -h\n' },
         { id: 'ssh-quick.memory',   title: 'SSH: Memory Usage (free -h)', cmd: 'free -h\n' },
@@ -19,9 +19,12 @@
     ];
 
     commands.forEach(function(c) {
-        zync.commands.register(c.id, c.title, function() {
-            zync.logger.log('[SSH Quick Commands] Running: ' + c.title);
-        });
+        (function(cmd) {
+            zync.commands.register(cmd.id, cmd.title, function() {
+                zync.terminal.send(cmd.cmd);
+                zync.logger.log('[SSH Quick Commands] Sent: ' + cmd.title);
+            });
+        })(c);
     });
 
     zync.logger.log('[SSH Quick Commands] Registered ' + commands.length + ' commands.');

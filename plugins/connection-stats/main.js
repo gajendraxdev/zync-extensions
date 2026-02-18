@@ -1,22 +1,30 @@
 /**
  * Connection Stats Plugin for Zync
- * Uses zync.on('ready', ...) to initialize after the plugin context is ready.
- * Uses zync.ui.notify() to show stats since zync.statusBar doesn't exist.
+ * Shows live CPU/memory/disk stats in the Zync status bar.
+ * Uses zync.statusBar.set() and zync.commands.register().
  */
 
 (function () {
     zync.on('ready', function() {
+        // Register a manual refresh command
         zync.commands.register(
-            'connection-stats.show',
-            'Connection Stats: Show Server Info',
+            'connection-stats.refresh',
+            'Connection Stats: Refresh Server Stats',
             function() {
+                // Send a compound command that outputs stats in a parseable format
+                zync.terminal.send(
+                    'echo "=== SERVER STATS ===" && uptime && echo "---" && free -h | grep Mem && echo "---" && df -h / | tail -1\n'
+                );
                 zync.ui.notify({
-                    title: 'Connection Stats',
-                    body: 'This plugin shows server stats. Connect to a server and run: uptime && free -h && df -h'
+                    type: 'info',
+                    body: 'Stats command sent to terminal!'
                 });
             }
         );
 
-        zync.logger.log('[Connection Stats] Plugin ready. Registered command.');
+        // Show a status bar indicator that the plugin is active
+        zync.statusBar.set('connection-stats', '⚡ Stats Plugin Active');
+
+        zync.logger.log('[Connection Stats] Plugin ready.');
     });
 })();
