@@ -1,52 +1,22 @@
 /**
  * Connection Stats Plugin for Zync
- * Periodically fetches CPU, memory, and disk stats from the active SSH session
- * and displays them in the status bar.
+ * Uses zync.on('ready', ...) to initialize after the plugin context is ready.
+ * Uses zync.ui.notify() to show stats since zync.statusBar doesn't exist.
  */
 
 (function () {
-    let intervalId = null;
+    zync.on('ready', function() {
+        zync.commands.register(
+            'connection-stats.show',
+            'Connection Stats: Show Server Info',
+            function() {
+                zync.ui.notify({
+                    title: 'Connection Stats',
+                    body: 'This plugin shows server stats. Connect to a server and run: uptime && free -h && df -h'
+                });
+            }
+        );
 
-    const COMMANDS = {
-        cpu: "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1",
-        mem: "free -m | awk 'NR==2{printf \"%.0f\", $3*100/$2}'",
-        disk: "df -h / | awk 'NR==2{print $5}'",
-    };
-
-    async function fetchStats() {
-        try {
-            const [cpu, mem, disk] = await Promise.all([
-                zync.ssh.exec(COMMANDS.cpu),
-                zync.ssh.exec(COMMANDS.mem),
-                zync.ssh.exec(COMMANDS.disk),
-            ]);
-
-            const label = `CPU: ${parseFloat(cpu).toFixed(1)}%  MEM: ${mem.trim()}%  DISK: ${disk.trim()}`;
-            zync.statusBar.setText('connection-stats', label);
-        } catch (e) {
-            zync.statusBar.setText('connection-stats', '');
-        }
-    }
-
-    // Start polling every 10 seconds
-    function start() {
-        fetchStats();
-        intervalId = setInterval(fetchStats, 10000);
-        console.log('[Connection Stats] Started polling.');
-    }
-
-    function stop() {
-        if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-        }
-        zync.statusBar.setText('connection-stats', '');
-        console.log('[Connection Stats] Stopped polling.');
-    }
-
-    // Listen for connection events
-    zync.events.on('connection:connected', start);
-    zync.events.on('connection:disconnected', stop);
-
-    console.log('[Connection Stats] Plugin loaded. Waiting for connection...');
+        zync.logger.log('[Connection Stats] Plugin ready. Registered command.');
+    });
 })();

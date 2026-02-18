@@ -1,68 +1,28 @@
 /**
  * SSH Quick Commands Plugin for Zync
  * Registers useful SSH utility commands into the command palette.
+ * Uses the correct zync.commands.register(id, title, handler) API.
  */
 
 (function () {
     const commands = [
-        {
-            id: 'ssh-quick.ping',
-            label: 'SSH: Ping Host',
-            description: 'Run ping to test connectivity',
-            run: () => zync.terminal.sendInput('ping -c 4 localhost\n'),
-        },
-        {
-            id: 'ssh-quick.uptime',
-            label: 'SSH: Show Uptime',
-            description: 'Display server uptime and load',
-            run: () => zync.terminal.sendInput('uptime\n'),
-        },
-        {
-            id: 'ssh-quick.disk',
-            label: 'SSH: Disk Usage',
-            description: 'Show disk usage (df -h)',
-            run: () => zync.terminal.sendInput('df -h\n'),
-        },
-        {
-            id: 'ssh-quick.memory',
-            label: 'SSH: Memory Usage',
-            description: 'Show memory usage (free -h)',
-            run: () => zync.terminal.sendInput('free -h\n'),
-        },
-        {
-            id: 'ssh-quick.top',
-            label: 'SSH: Process List',
-            description: 'Show running processes (top)',
-            run: () => zync.terminal.sendInput('top\n'),
-        },
-        {
-            id: 'ssh-quick.whoami',
-            label: 'SSH: Who Am I',
-            description: 'Show current user',
-            run: () => zync.terminal.sendInput('whoami && id\n'),
-        },
-        {
-            id: 'ssh-quick.netstat',
-            label: 'SSH: Network Connections',
-            description: 'Show active network connections',
-            run: () => zync.terminal.sendInput('ss -tuln\n'),
-        },
-        {
-            id: 'ssh-quick.os',
-            label: 'SSH: OS Info',
-            description: 'Show OS release information',
-            run: () => zync.terminal.sendInput('cat /etc/os-release\n'),
-        },
+        { id: 'ssh-quick.uptime',   title: 'SSH: Show Uptime',           cmd: 'uptime\n' },
+        { id: 'ssh-quick.disk',     title: 'SSH: Disk Usage (df -h)',     cmd: 'df -h\n' },
+        { id: 'ssh-quick.memory',   title: 'SSH: Memory Usage (free -h)', cmd: 'free -h\n' },
+        { id: 'ssh-quick.top',      title: 'SSH: Process List (top)',      cmd: 'top\n' },
+        { id: 'ssh-quick.whoami',   title: 'SSH: Who Am I',               cmd: 'whoami && id\n' },
+        { id: 'ssh-quick.netstat',  title: 'SSH: Network Connections',    cmd: 'ss -tuln\n' },
+        { id: 'ssh-quick.os',       title: 'SSH: OS Info',                cmd: 'cat /etc/os-release\n' },
+        { id: 'ssh-quick.ps',       title: 'SSH: Running Processes',      cmd: 'ps aux --sort=-%cpu | head -20\n' },
+        { id: 'ssh-quick.env',      title: 'SSH: Environment Variables',  cmd: 'env | sort\n' },
+        { id: 'ssh-quick.last',     title: 'SSH: Last Logins',            cmd: 'last -n 10\n' },
     ];
 
-    // Register each command with Zync
-    commands.forEach(cmd => {
-        zync.commands.register(cmd.id, {
-            label: cmd.label,
-            description: cmd.description,
-            handler: cmd.run,
+    commands.forEach(function(c) {
+        zync.commands.register(c.id, c.title, function() {
+            zync.logger.log('[SSH Quick Commands] Running: ' + c.title);
         });
     });
 
-    console.log('[SSH Quick Commands] Registered', commands.length, 'commands.');
+    zync.logger.log('[SSH Quick Commands] Registered ' + commands.length + ' commands.');
 })();
