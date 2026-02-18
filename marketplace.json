@@ -1,0 +1,24 @@
+{
+  "plugins": [
+    {
+      "id": "com.zync.plugin.ssh-quick-commands",
+      "name": "SSH Quick Commands",
+      "version": "1.0.0",
+      "description": "Adds useful SSH utility commands to the command palette — ping, uptime, disk usage, memory, and more.",
+      "author": "Zync Community",
+      "downloadUrl": "https://raw.githubusercontent.com/gajendraxdev/zync-extensions/main/plugins/ssh-quick-commands.zip",
+      "thumbnailUrl": "",
+      "type": "tool"
+    },
+    {
+      "id": "com.zync.plugin.connection-stats",
+      "name": "Connection Stats",
+      "version": "1.0.0",
+      "description": "Displays live CPU, memory, and disk stats for your active SSH connection in the status bar.",
+      "author": "Zync Community",
+      "downloadUrl": "https://raw.githubusercontent.com/gajendraxdev/zync-extensions/main/plugins/connection-stats.zip",
+      "thumbnailUrl": "",
+      "type": "tool"
+    }
+  ]
+}

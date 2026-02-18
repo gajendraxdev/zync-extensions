@@ -1,0 +1,6 @@
+{
+  "id": "com.zync.plugin.ssh-quick-commands",
+  "name": "SSH Quick Commands",
+  "version": "1.0.0",
+  "main": "main.js"
+}

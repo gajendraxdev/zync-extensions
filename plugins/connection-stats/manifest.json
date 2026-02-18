@@ -1,0 +1,6 @@
+{
+  "id": "com.zync.plugin.connection-stats",
+  "name": "Connection Stats",
+  "version": "1.0.0",
+  "main": "main.js"
+}
