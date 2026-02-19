@@ -412,12 +412,12 @@ function renderTable() {
       '<td class="metric">' + (p.status === 'online' ? formatUptime(p.uptime) : '—') + '</td>' +
       '<td>' +
         '<div class="actions">' +
-          (p.status === 'online'
-            ? '<button class="btn btn-sm" onclick="restartProcess(\'' + escapeHtml(p.name) + '\')">↺ Restart</button>' +
-              '<button class="btn btn-sm btn-danger" onclick="stopProcess(\'' + escapeHtml(p.name) + '\')">■ Stop</button>'
-            : '<button class="btn btn-sm btn-accent" onclick="startProcess(\'' + escapeHtml(p.name) + '\')">▶ Start</button>') +
-          '<button class="btn btn-sm" onclick="viewLogs(\'' + escapeHtml(p.name) + '\')">📜 Logs</button>' +
-          '<button class="btn btn-sm btn-danger" onclick="deleteProcess(\'' + escapeHtml(p.name) + '\')">🗑</button>' +
+        (p.status === 'online'
+          ? '<button class="btn btn-sm" onclick="restartProcess(\\\' + escapeHtml(p.name) + \\\')">↺ Restart</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="stopProcess(\\\' + escapeHtml(p.name) + \\\')">■ Stop</button>'
+          : '<button class="btn btn-sm btn-accent" onclick="startProcess(\\\' + escapeHtml(p.name) + \\\')">▶ Start</button>') +
+        '<button class="btn btn-sm" onclick="viewLogs(\\\' + escapeHtml(p.name) + \\\')">📜 Logs</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteProcess(\\\' + escapeHtml(p.name) + \\\')">🗑</button>' +
         '</div>' +
       '</td>' +
     '</tr>';
