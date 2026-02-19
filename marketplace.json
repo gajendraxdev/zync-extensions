@@ -19,6 +19,16 @@
       "downloadUrl": "https://raw.githubusercontent.com/gajendraxdev/zync-extensions/main/plugins/connection-stats.zip",
       "thumbnailUrl": "",
       "type": "tool"
+    },
+    {
+      "id": "com.zync.plugin.pm2-monitor",
+      "name": "PM2 Monitor",
+      "version": "1.0.0",
+      "description": "A full PM2 process manager panel inside Zync. View process status, CPU/memory usage, restart, stop, and tail logs — all from a rich UI panel in your connection tab.",
+      "author": "Zync Community",
+      "downloadUrl": "https://raw.githubusercontent.com/gajendraxdev/zync-extensions/main/plugins/pm2-monitor.zip",
+      "thumbnailUrl": "",
+      "type": "panel"
     }
   ]
 }
