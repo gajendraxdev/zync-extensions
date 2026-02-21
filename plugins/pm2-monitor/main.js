@@ -261,24 +261,39 @@ function runCmd(cmd) {
   window.zync.terminal.send(cmd + '\\n');
 }
 
-function restartProcess(name) {
-  if (confirm('Restart ' + name + '?')) {
+async function restartProcess(name) {
+  const confirmed = await window.zync.ui.confirm({
+    title: 'Restart Process',
+    message: 'Are you sure you want to restart ' + name + '?'
+  });
+  if (confirmed) {
     runCmd('pm2 restart ' + name);
     window.zync.ui.notify({ type: 'info', body: 'Restarting ' + name + '...' });
     setTimeout(fetchProcesses, 2000);
   }
 }
 
-function stopProcess(name) {
-  if (confirm('Stop ' + name + '?')) {
+async function stopProcess(name) {
+  const confirmed = await window.zync.ui.confirm({
+    title: 'Stop Process',
+    message: 'Are you sure you want to stop ' + name + '?',
+    variant: 'danger'
+  });
+  if (confirmed) {
     runCmd('pm2 stop ' + name);
     window.zync.ui.notify({ type: 'info', body: 'Stopping ' + name + '...' });
     setTimeout(fetchProcesses, 2000);
   }
 }
 
-function deleteProcess(name) {
-  if (confirm('Delete ' + name + ' from PM2? This cannot be undone.')) {
+async function deleteProcess(name) {
+  const confirmed = await window.zync.ui.confirm({
+    title: 'Delete Process',
+    message: 'Delete ' + name + ' from PM2? This cannot be undone.',
+    variant: 'danger',
+    confirmText: 'Delete'
+  });
+  if (confirmed) {
     runCmd('pm2 delete ' + name);
     window.zync.ui.notify({ type: 'warning', body: 'Deleted ' + name + ' from PM2' });
     setTimeout(fetchProcesses, 2000);
