@@ -289,7 +289,7 @@
     <input type="text" id="search-box" class="search-input" placeholder="Search processes..." oninput="filterTable()" />
     <span class="badge" id="process-count-badge">Loading…</span>
     <button class="btn btn-accent" id="refresh-btn" onclick="fetchProcesses()">⟳ Refresh</button>
-    <button class="btn" onclick="runCmd('pm2 save')">💾 Save</button>
+    <button class="btn" id="save-btn" onclick="saveProcessList()">💾 Save</button>
   </div>
 </div>
 
@@ -529,6 +529,24 @@ function startProcess(name) {
   runCmd('pm2 start ' + name);
   window.zync.ui.notify({ type: 'info', body: 'Starting ' + name + '...' });
   setTimeout(fetchProcesses, 2000);
+}
+
+function saveProcessList() {
+  var btn = document.getElementById('save-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+  }
+  runCmd('pm2 save').then(function() {
+    window.zync.ui.notify({ type: 'success', body: 'PM2 process list successfully saved!' });
+  }).catch(function(err) {
+    window.zync.ui.notify({ type: 'error', body: 'Failed to save PM2 list: ' + String(err) });
+  }).finally(function() {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '💾 Save';
+    }
+  });
 }
 
 function viewLogs(name) {
