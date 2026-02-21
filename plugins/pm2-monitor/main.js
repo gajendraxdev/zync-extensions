@@ -48,15 +48,13 @@
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
-  .header-left { display: flex; align-items: center; gap: 10px; }
-  .header-icon {
-    width: 28px; height: 28px;
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
+  .header-left { display: flex; align-items: center;    gap: 12px;
   }
-  .header-title { font-weight: 600; font-size: 14px; }
+  .header-icon {
+    width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), #eab308);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #fff; box-shadow: 0 4px 16px rgba(59,130,246,0.4); text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }font-size: 14px; }
   .header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
   .header-actions { display: flex; gap: 8px; align-items: center; }
@@ -92,23 +90,22 @@
 
   /* Stats Row */
   .stats-row {
-    display: flex;
-    gap: 12px;
-    padding: 10px 16px;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
   }
   .stat {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    display: flex; flex-direction: column; gap: 3px;
+    background: linear-gradient(145deg, var(--surface) 0%, rgba(255,255,255,0.03) 100%);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
   }
-  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
-  .stat-value { font-size: 18px; font-weight: 700; }
+  .stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .stat-value { font-size: 32px; font-weight: 500; font-family: 'JetBrains Mono', 'Fira Code', monospace; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
   .stat-value.green { color: var(--green); }
   .stat-value.red { color: var(--red); }
   .stat-value.yellow { color: var(--yellow); }
@@ -124,22 +121,16 @@
   .table-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
   table { width: 100%; border-collapse: collapse; }
-  thead th {
-    text-align: left;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--border);
+  thead  th {
+    text-align: left; padding: 12px 16px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); font-weight: 600;
   }
-  tbody tr {
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    transition: background 0.1s;
+  td {
+    padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.02); vertical-align: middle;
   }
-  tbody tr:hover { background: rgba(255,255,255,0.03); }
-  tbody td { padding: 9px 10px; vertical-align: middle; }
+  tr { transition: background 0.15s; }
+  tr:hover { background: rgba(255,255,255,0.02); }
+  tr:last-child td { border-bottom: none; }
 
   .process-name { font-weight: 600; font-size: 13px; }
   .process-id { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: monospace; }
@@ -255,6 +246,7 @@
   .inspector-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .inspector-label { color: var(--muted); }
   .inspector-val { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: var(--text); }
+  .metric { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: var(--muted); font-size: 12px; }
   .process-name-link { cursor: pointer; transition: color 0.15s; }
   .process-name-link:hover { color: var(--accent); text-decoration: underline; }
 </style>
@@ -669,22 +661,22 @@ function renderTable() {
     
     var contextMenuHtml = 
       '<div style="position:relative">' +
-        '<button class="context-btn" ' + (isPending ? 'disabled' : '') + ' onclick="toggleMenu(event, \'' + p.pm_id + '\')">⋮</button>' +
+        '<button class="context-btn" ' + (isPending ? 'disabled' : '') + ' onclick="toggleMenu(event, &apos;' + p.pm_id + '&apos;)">⋮</button>' +
         '<div class="context-menu" id="menu-' + p.pm_id + '">' +
           (p.status === 'online' 
-            ? '<button class="context-menu-item" onclick="restartProcess(\'' + escapeHtml(p.name) + '\')">↺ Restart</button>' +
-              '<button class="context-menu-item" onclick="stopProcess(\'' + escapeHtml(p.name) + '\')">■ Stop</button>'
-            : '<button class="context-menu-item" onclick="startProcess(\'' + escapeHtml(p.name) + '\')">▶ Start</button>') +
+            ? '<button class="context-menu-item" onclick="restartProcess(&apos;' + escapeHtml(p.name) + '&apos;)">↺ Restart</button>' +
+              '<button class="context-menu-item" onclick="stopProcess(&apos;' + escapeHtml(p.name) + '&apos;)">■ Stop</button>'
+            : '<button class="context-menu-item" onclick="startProcess(&apos;' + escapeHtml(p.name) + '&apos;)">▶ Start</button>') +
           '<hr style="border:none;border-top:1px solid var(--border);margin:4px 0">' +
-          '<button class="context-menu-item" onclick="viewLogs(\'' + escapeHtml(p.name) + '\')">📜 Logs</button>' +
-          '<button class="context-menu-item danger" onclick="deleteProcess(\'' + escapeHtml(p.name) + '\')">🗑 Delete</button>' +
+          '<button class="context-menu-item" onclick="viewLogs(&apos;' + escapeHtml(p.name) + '&apos;)">📜 Logs</button>' +
+          '<button class="context-menu-item danger" onclick="deleteProcess(&apos;' + escapeHtml(p.name) + '&apos;)">🗑 Delete</button>' +
         '</div>' +
       '</div>';
     
     return '<tr>' +
-      '<td style="width: 30px;"><input type="checkbox" class="checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="toggleSelect(event, \'' + escapeHtml(p.name) + '\')"></td>' +
+      '<td style="width: 30px;"><input type="checkbox" class="checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="toggleSelect(event, &apos;' + escapeHtml(p.name) + '&apos;)"></td>' +
       '<td>' +
-        '<div class="process-name process-name-link" onclick="openInspector(\'' + escapeHtml(p.name) + '\')">' + escapeHtml(p.name) + '</div>' +
+        '<div class="process-name process-name-link" onclick="openInspector(&apos;' + escapeHtml(p.name) + '&apos;)">' + escapeHtml(p.name) + '</div>' +
         '<div class="process-id">id:' + p.pm_id + (p.pid ? ' · pid:' + p.pid : '') + '</div>' +
       '</td>' +
       '<td><span class="status-dot ' + statusClass(p.status) + '">' + p.status + '</span></td>' +
