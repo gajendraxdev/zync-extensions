@@ -748,6 +748,21 @@ function renderTable() {
   document.getElementById('table-container').innerHTML = tableHtml;
 }
 
+// Intercept Zync Core Theme Updates
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'zync:theme:update') {
+    var c = e.data.payload.colors;
+    if (c) {
+      document.documentElement.style.setProperty('--bg', c.background);
+      document.documentElement.style.setProperty('--surface', c.surface);
+      document.documentElement.style.setProperty('--border', c.border);
+      document.documentElement.style.setProperty('--text', c.text);
+      document.documentElement.style.setProperty('--muted', c.muted);
+      document.documentElement.style.setProperty('--accent', c.primary);
+    }
+  }
+});
+
 // Auto-Load on Startup
 setTimeout(fetchProcesses, 100);
 </script>
@@ -782,40 +797,6 @@ setTimeout(fetchProcesses, 100);
                     zync.terminal.send(cmd.cmd);
                 });
             })(c);
-        });
-
-        // Sync with Zync Theme Dynamically
-        if (zync.onThemeChanged) {
-          zync.onThemeChanged(function(theme) {
-            var root = document.querySelector('iframe[srcdoc*="PM2 Monitor"]').contentDocument.documentElement;
-            if (theme.colors) {
-              root.style.setProperty('--bg', theme.colors.background || '#0f111a');
-              root.style.setProperty('--surface', theme.colors.surface || '#1a1d2e');
-              root.style.setProperty('--border', theme.colors.border || 'rgba(255,255,255,0.08)');
-              root.style.setProperty('--text', theme.colors.text || '#e2e8f0');
-              root.style.setProperty('--muted', theme.colors.muted || '#94a3b8');
-              root.style.setProperty('--accent', theme.colors.primary || '#6366f1');
-            }
-          });
-        }
-        
-        // Listen to global IPC events for theme updates as fallback
-        window.addEventListener('message', function(e) {
-          if (e.data && e.data.type === 'theme-update') {
-             var root = document.querySelector('iframe[srcdoc*="PM2 Monitor"]');
-             if (root && root.contentDocument) {
-               var r = root.contentDocument.documentElement;
-               var t = e.data.theme;
-               if (t) {
-                 r.style.setProperty('--bg', t.background);
-                 r.style.setProperty('--surface', t.surface);
-                 r.style.setProperty('--border', t.border);
-                 r.style.setProperty('--text', t.text);
-                 r.style.setProperty('--muted', t.muted);
-                 r.style.setProperty('--accent', t.primary);
-               }
-             }
-          }
         });
 
         zync.statusBar.set('pm2-monitor', '⚡ PM2 Monitor Active');
