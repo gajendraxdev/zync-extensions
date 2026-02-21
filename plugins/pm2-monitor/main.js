@@ -278,7 +278,7 @@ var processes = [];
 var lastUpdated = null;
 
 function runCmd(cmd) {
-  window.zync.terminal.send(cmd + '\\n');
+  return window.zync.ssh.exec(cmd);
 }
 
 // Helper for Optimistic UI Updates
