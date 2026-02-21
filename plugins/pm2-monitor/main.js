@@ -340,7 +340,7 @@ function startProcess(name) {
 }
 
 function viewLogs(name) {
-  window.parent.postMessage({ type: 'zync:terminal:opentab', payload: { command: 'pm2 logs ' + name + ' --lines 50\\n' } }, '*');
+  window.zync.terminal.newTab({ command: 'pm2 logs ' + name + ' --lines 50\\n' });
   window.zync.ui.notify({ type: 'success', body: 'Opening logs for ' + name + ' in new Terminal tab.' });
 }
 
