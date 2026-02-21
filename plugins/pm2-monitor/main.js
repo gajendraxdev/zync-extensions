@@ -271,33 +271,6 @@
   .inspector-label { color: var(--muted); }
   .inspector-val { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: var(--text); }
   .metric { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: var(--muted); font-size: 12px; }
-  /* Progress Bars */
-  .progress-bg {
-    width: 60px; height: 4px; background: rgba(255,255,255,0.05);
-    border-radius: 2px; overflow: hidden; margin-top: 4px; border: 1px solid rgba(255,255,255,0.02);
-  }
-  .progress-fill {
-    height: 100%; width: 0%; transition: width 0.3s ease-out;
-    background: var(--accent);
-  }
-  .progress-fill.high { background: var(--orange); }
-  .progress-fill.critical { background: var(--red); }
-
-  /* Toggle Switch */
-  .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); cursor: pointer; user-select: none; }
-  .toggle-switch {
-    width: 28px; height: 16px; background: rgba(255,255,255,0.1);
-    border-radius: 10px; position: relative; transition: all 0.2s;
-    border: 1px solid var(--border);
-  }
-  .toggle-switch::after {
-    content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px;
-    background: var(--muted); border-radius: 50%; transition: all 0.2s;
-  }
-  .toggle-wrap.active .toggle-switch { background: var(--accent); border-color: var(--accent); }
-  .toggle-wrap.active .toggle-switch::after { transform: translateX(12px); background: #fff; }
-  .toggle-wrap:hover .toggle-switch { border-color: rgba(255,255,255,0.3); }
-
   .process-name-link { cursor: pointer; transition: color 0.15s; }
   .process-name-link:hover { color: var(--accent); text-decoration: underline; }
 </style>
@@ -313,10 +286,6 @@
     </div>
   </div>
   <div class="header-actions">
-    <div class="toggle-wrap active" id="auto-refresh-toggle" onclick="toggleAutoRefresh()">
-      <span>Auto-refresh</span>
-      <div class="toggle-switch"></div>
-    </div>
     <input type="text" id="search-box" class="search-input" placeholder="Search processes..." oninput="filterTable()" />
     <span class="badge" id="process-count-badge">Loading…</span>
     <button class="btn btn-accent" id="refresh-btn" onclick="fetchProcesses()">⟳ Refresh</button>
@@ -380,21 +349,6 @@ var lastUpdated = null;
 var sortCol = 'name';
 var sortAsc = true;
 var selectedItems = [];
-var autoRefresh = true;
-var refreshInterval = null;
-
-function toggleAutoRefresh() {
-  autoRefresh = !autoRefresh;
-  var wrap = document.getElementById('auto-refresh-toggle');
-  if (autoRefresh) {
-    wrap.classList.add('active');
-    fetchProcesses();
-  } else {
-    wrap.classList.remove('active');
-    if (refreshInterval) clearInterval(refreshInterval);
-    refreshInterval = null;
-  }
-}
 
 function runCmd(cmd) {
   return window.zync.ssh.exec(cmd);
@@ -634,15 +588,17 @@ function statusClass(status) {
 }
 
 function fetchProcesses() {
-  var refreshBtn = document.getElementById('refresh-btn');
-  refreshBtn.disabled = true;
-  refreshBtn.textContent = 'Loading...';
+  document.getElementById('refresh-btn').disabled = true;
+  document.getElementById('refresh-btn').textContent = 'Loading...';
 
   window.zync.ssh.exec('pm2 jlist').then(function(output) {
       try {
           var trimmed = output.trim();
+          // pm2 jlist sometimes outputs warnings before JSON, try to find the array
           var jsonStart = trimmed.indexOf('[');
-          if (jsonStart !== -1) trimmed = trimmed.substring(jsonStart);
+          if (jsonStart !== -1) {
+              trimmed = trimmed.substring(jsonStart);
+          }
           
           var data = JSON.parse(trimmed);
           processes = data.map(function(p) {
@@ -655,17 +611,11 @@ function fetchProcesses() {
                   restarts: p.pm2_env.restart_time,
                   uptime: p.pm2_env.pm_uptime ? (new Date().getTime() - p.pm2_env.pm_uptime) : 0,
                   pid: p.pid,
-                  raw: p
+                  raw: p // Store full obj for inspector
               };
           });
           document.getElementById('alert-area').innerHTML = '';
           renderTable();
-
-          // Handle Auto-Refresh Logic
-          if (refreshInterval) clearInterval(refreshInterval);
-          if (autoRefresh) {
-            refreshInterval = setInterval(fetchProcesses, 15000);
-          }
       } catch (e) {
           console.error('Failed to parse pm2 jlist', e, output);
            document.getElementById('alert-area').innerHTML =
@@ -676,9 +626,10 @@ function fetchProcesses() {
       console.error('SSH Exec Error:', err);
       document.getElementById('alert-area').innerHTML =
         '<div class="alert-banner">⚠️ Error executing PM2: ' + String(err) + '</div>';
+      document.getElementById('table-container').innerHTML = '';
   }).finally(function() {
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = '⟳ Refresh';
+      document.getElementById('refresh-btn').disabled = false;
+      document.getElementById('refresh-btn').textContent = '⟳ Refresh';
   });
 }
 
@@ -771,14 +722,8 @@ function renderTable() {
         '<div class="process-id">id:' + p.pm_id + (p.pid ? ' · pid:' + p.pid : '') + '</div>' +
       '</td>' +
       '<td><span class="status-dot ' + statusClass(p.status) + '">' + p.status + '</span></td>' +
-      '<td>' +
-        '<span class="metric ' + cpuClass(p.cpu) + '">' + p.cpu + '%</span>' +
-        '<div class="progress-bg"><div class="progress-fill ' + cpuClass(p.cpu).replace('metric-', '') + '" style="width:' + Math.min(p.cpu, 100) + '%"></div></div>' +
-      '</td>' +
-      '<td>' +
-        '<span class="metric">' + formatMemory(p.memory) + '</span>' +
-        '<div class="progress-bg"><div class="progress-fill" style="width:' + Math.min((p.memory / (1024*1024*1024)) * 100, 100) + '%"></div></div>' +
-      '</td>' +
+      '<td><span class="metric ' + cpuClass(p.cpu) + '">' + p.cpu + '%</span></td>' +
+      '<td><span class="metric">' + formatMemory(p.memory) + '</span></td>' +
       '<td><span class="metric">' + p.restarts + '</span></td>' +
       '<td class="metric">' + (p.status === 'online' ? formatUptime(p.uptime) : '—') + '</td>' +
       '<td style="text-align:right;">' + contextMenuHtml + '</td>' +
@@ -804,21 +749,6 @@ function renderTable() {
 
 // Auto-Load on Startup
 setTimeout(fetchProcesses, 100);
-// Listen to Zync Theme changes
-window.addEventListener('message', function(event) {
-  var data = event.data || {};
-  if (data.type === 'zync:theme:update' && data.payload && data.payload.colors) {
-    var colors = data.payload.colors;
-    var root = document.documentElement;
-    if (colors.background) root.style.setProperty('--bg', colors.background);
-    if (colors.surface) root.style.setProperty('--surface', colors.surface);
-    if (colors.border) root.style.setProperty('--border', colors.border);
-    if (colors.text) root.style.setProperty('--text', colors.text);
-    if (colors.muted) root.style.setProperty('--muted', colors.muted);
-    if (colors.primary) root.style.setProperty('--accent', colors.primary);
-  }
-});
-
 </script>
 </body>
 </html>`;
