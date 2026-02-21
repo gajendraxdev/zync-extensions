@@ -48,13 +48,13 @@
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
-  .header-left { display: flex; align-items: center;    gap: 12px;
-  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
   .header-icon {
-    width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), #eab308);
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 22px; color: #fff; box-shadow: 0 4px 16px rgba(59,130,246,0.4); text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }font-size: 14px; }
+    width: 32px; height: 32px; background: rgba(99,102,241,0.15);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--accent); 
+  }
+  .header-title { font-weight: 500; font-size: 14px; }
   .header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
   .header-actions { display: flex; gap: 8px; align-items: center; }
@@ -67,6 +67,23 @@
     color: var(--accent);
     border: 1px solid rgba(99,102,241,0.2);
   }
+
+  /* Search */
+  .search-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px 6px 32px;
+    border-radius: 8px; /* Changed from 6px to 8px */
+    font-size: 13px;
+    width: 240px;
+    outline: none;
+    transition: all 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+  }
+  .search-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.02); }
 
   /* Buttons */
   .btn {
@@ -90,22 +107,18 @@
 
   /* Stats Row */
   .stats-row {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; padding: 0 16px;
   }
   .stat {
-    background: linear-gradient(145deg, var(--surface) 0%, rgba(255,255,255,0.03) 100%);
-    border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px 20px;
+    background: transparent;
+    border-bottom: 2px solid var(--border);
+    padding: 12px 0;
     display: flex; flex-direction: column; gap: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s;
   }
-  .stat:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-  .stat-value { font-size: 32px; font-weight: 500; font-family: 'JetBrains Mono', 'Fira Code', monospace; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+  .stat:hover { border-bottom-color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  .stat-value { font-size: 28px; font-weight: 400; font-family: 'JetBrains Mono', 'Fira Code', monospace; line-height: 1; }
   .stat-value.green { color: var(--green); }
   .stat-value.red { color: var(--red); }
   .stat-value.yellow { color: var(--yellow); }
@@ -181,7 +194,18 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Checkboxes */
-  .checkbox { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); }
+  .checkbox { 
+    appearance: none; -webkit-appearance: none;
+    width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 4px;
+    background: rgba(255,255,255,0.02); cursor: pointer; position: relative;
+    transition: all 0.2s;
+  }
+  .checkbox:hover { border-color: rgba(255,255,255,0.3); }
+  .checkbox:checked { background: var(--accent); border-color: var(--accent); }
+  .checkbox:checked::after {
+    content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+    border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
   
   /* Sortable Headers */
   th.sortable { cursor: pointer; user-select: none; transition: color 0.15s; }
@@ -691,12 +715,12 @@ function renderTable() {
   var tableHtml = '<table>' +
     '<thead><tr>' +
       '<th style="width: 30px;"><input type="checkbox" class="checkbox" ' + (allSelected ? 'checked' : '') + ' onclick="toggleSelectAll(event)"></th>' +
-      '<th class="sortable ' + getSortClass('name') + '" onclick="setSort(\'name\')">Process</th>' +
-      '<th class="sortable ' + getSortClass('status') + '" onclick="setSort(\'status\')">Status</th>' +
-      '<th class="sortable ' + getSortClass('cpu') + '" onclick="setSort(\'cpu\')">CPU</th>' +
-      '<th class="sortable ' + getSortClass('memory') + '" onclick="setSort(\'memory\')">Memory</th>' +
-      '<th class="sortable ' + getSortClass('restarts') + '" onclick="setSort(\'restarts\')">↺</th>' +
-      '<th class="sortable ' + getSortClass('uptime') + '" onclick="setSort(\'uptime\')">Uptime</th>' +
+      '<th class="sortable ' + getSortClass('name') + '" onclick="setSort(&apos;name&apos;)">Process</th>' +
+      '<th class="sortable ' + getSortClass('status') + '" onclick="setSort(&apos;status&apos;)">Status</th>' +
+      '<th class="sortable ' + getSortClass('cpu') + '" onclick="setSort(&apos;cpu&apos;)">CPU</th>' +
+      '<th class="sortable ' + getSortClass('memory') + '" onclick="setSort(&apos;memory&apos;)">Memory</th>' +
+      '<th class="sortable ' + getSortClass('restarts') + '" onclick="setSort(&apos;restarts&apos;)">↺</th>' +
+      '<th class="sortable ' + getSortClass('uptime') + '" onclick="setSort(&apos;uptime&apos;)">Uptime</th>' +
       '<th style="text-align:right;">Actions</th>' +
     '</tr></thead>' +
     '<tbody>' + rows.join('') + '</tbody>' +
