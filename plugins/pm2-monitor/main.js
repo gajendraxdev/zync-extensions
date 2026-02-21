@@ -15,15 +15,16 @@
 <title>PM2 Monitor</title>
 <style>
   :root {
+    /* These defaults will be overridden by Zync's dynamic JS theme injector below */
+    --accent: #6366f1;
     --bg: #0f111a;
     --surface: #1a1d2e;
     --border: rgba(255,255,255,0.08);
     --text: #e2e8f0;
-    --muted: #64748b;
-    --accent: #6366f1;
-    --green: #10b981;
+    --muted: #94a3b8;
+    --green: #22c55e;
     --red: #ef4444;
-    --yellow: #f59e0b;
+    --yellow: #eab308;
     --orange: #f97316;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -781,6 +782,40 @@ setTimeout(fetchProcesses, 100);
                     zync.terminal.send(cmd.cmd);
                 });
             })(c);
+        });
+
+        // Sync with Zync Theme Dynamically
+        if (zync.onThemeChanged) {
+          zync.onThemeChanged(function(theme) {
+            var root = document.querySelector('iframe[srcdoc*="PM2 Monitor"]').contentDocument.documentElement;
+            if (theme.colors) {
+              root.style.setProperty('--bg', theme.colors.background || '#0f111a');
+              root.style.setProperty('--surface', theme.colors.surface || '#1a1d2e');
+              root.style.setProperty('--border', theme.colors.border || 'rgba(255,255,255,0.08)');
+              root.style.setProperty('--text', theme.colors.text || '#e2e8f0');
+              root.style.setProperty('--muted', theme.colors.muted || '#94a3b8');
+              root.style.setProperty('--accent', theme.colors.primary || '#6366f1');
+            }
+          });
+        }
+        
+        // Listen to global IPC events for theme updates as fallback
+        window.addEventListener('message', function(e) {
+          if (e.data && e.data.type === 'theme-update') {
+             var root = document.querySelector('iframe[srcdoc*="PM2 Monitor"]');
+             if (root && root.contentDocument) {
+               var r = root.contentDocument.documentElement;
+               var t = e.data.theme;
+               if (t) {
+                 r.style.setProperty('--bg', t.background);
+                 r.style.setProperty('--surface', t.surface);
+                 r.style.setProperty('--border', t.border);
+                 r.style.setProperty('--text', t.text);
+                 r.style.setProperty('--muted', t.muted);
+                 r.style.setProperty('--accent', t.primary);
+               }
+             }
+          }
         });
 
         zync.statusBar.set('pm2-monitor', '⚡ PM2 Monitor Active');
