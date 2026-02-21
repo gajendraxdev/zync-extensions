@@ -15,16 +15,15 @@
 <title>PM2 Monitor</title>
 <style>
   :root {
-    /* These defaults will be overridden by Zync's dynamic JS theme injector below */
-    --accent: #6366f1;
     --bg: #0f111a;
     --surface: #1a1d2e;
     --border: rgba(255,255,255,0.08);
     --text: #e2e8f0;
-    --muted: #94a3b8;
-    --green: #22c55e;
+    --muted: #64748b;
+    --accent: #6366f1;
+    --green: #10b981;
     --red: #ef4444;
-    --yellow: #eab308;
+    --yellow: #f59e0b;
     --orange: #f97316;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -748,23 +747,23 @@ function renderTable() {
   document.getElementById('table-container').innerHTML = tableHtml;
 }
 
-// Intercept Zync Core Theme Updates
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'zync:theme:update') {
-    var c = e.data.payload.colors;
-    if (c) {
-      document.documentElement.style.setProperty('--bg', c.background);
-      document.documentElement.style.setProperty('--surface', c.surface);
-      document.documentElement.style.setProperty('--border', c.border);
-      document.documentElement.style.setProperty('--text', c.text);
-      document.documentElement.style.setProperty('--muted', c.muted);
-      document.documentElement.style.setProperty('--accent', c.primary);
-    }
+// Auto-Load on Startup
+setTimeout(fetchProcesses, 100);
+// Listen to Zync Theme changes
+window.addEventListener('message', function(event) {
+  var data = event.data || {};
+  if (data.type === 'zync:theme:update' && data.payload && data.payload.colors) {
+    var colors = data.payload.colors;
+    var root = document.documentElement;
+    if (colors.background) root.style.setProperty('--bg', colors.background);
+    if (colors.surface) root.style.setProperty('--surface', colors.surface);
+    if (colors.border) root.style.setProperty('--border', colors.border);
+    if (colors.text) root.style.setProperty('--text', colors.text);
+    if (colors.muted) root.style.setProperty('--muted', colors.muted);
+    if (colors.primary) root.style.setProperty('--accent', colors.primary);
   }
 });
 
-// Auto-Load on Startup
-setTimeout(fetchProcesses, 100);
 </script>
 </body>
 </html>`;
