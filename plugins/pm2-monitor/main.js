@@ -247,7 +247,7 @@
     <div class="empty-state">
       <div class="empty-icon">🖥️</div>
       <div class="empty-title">No data yet</div>
-      <div class="empty-sub">Click <strong>Refresh</strong> to run <code>pm2 jlist</code> on the server and load your processes.</div>
+      <div class="empty-sub">Click <strong>Load Processes</strong> to fetch data from the server.</div>
       <button class="btn btn-accent" style="margin-top:8px" onclick="fetchProcesses()">⟳ Load Processes</button>
     </div>
   </div>
@@ -295,18 +295,6 @@ function viewLogs(name) {
   runCmd('pm2 logs ' + name + ' --lines 50');
 }
 
-function fetchProcesses() {
-  var container = document.getElementById('table-container');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div> Running pm2 jlist...</div>';
-  document.getElementById('process-count-badge').textContent = 'Loading…';
-
-  // Send pm2 jlist to terminal — output parsing is manual
-  runCmd('pm2 jlist');
-
-  // Since we cant read stdout from plugin, show demo data with a note
-  setTimeout(loadDemoData, 800);
-}
-
 function formatUptime(ms) {
   if (!ms) return '—';
   var s = Math.floor(ms / 1000);
@@ -338,41 +326,47 @@ function statusClass(status) {
   return 'status-launching';
 }
 
-function loadDemoData() {
-  // Demo processes — in a real SSH exec scenario these would come from pm2 jlist
-  processes = [
-    {
-      name: 'api-server',      pm_id: 0, status: 'online',
-      cpu: 12, memory: 48 * 1024 * 1024,
-      restarts: 2, uptime: 3 * 24 * 60 * 60 * 1000,
-      pid: 12345
-    },
-    {
-      name: 'worker-queue',    pm_id: 1, status: 'online',
-      cpu: 4, memory: 32 * 1024 * 1024,
-      restarts: 0, uptime: 5 * 24 * 60 * 60 * 1000,
-      pid: 12346
-    },
-    {
-      name: 'cron-jobs',       pm_id: 2, status: 'online',
-      cpu: 0, memory: 24 * 1024 * 1024,
-      restarts: 1, uptime: 2 * 60 * 60 * 1000,
-      pid: 12347
-    },
-    {
-      name: 'ws-gateway',      pm_id: 3, status: 'stopped',
-      cpu: 0, memory: 0, restarts: 5, uptime: 0, pid: null
-    },
-    {
-      name: 'metrics-exporter', pm_id: 4, status: 'errored',
-      cpu: 0, memory: 0, restarts: 99, uptime: 0, pid: null
-    },
-  ];
+function fetchProcesses() {
+  var container = document.getElementById('table-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Fetching processes...</div>';
+  document.getElementById('process-count-badge').textContent = 'Loading…';
 
-  renderTable();
-
-  document.getElementById('alert-area').innerHTML =
-    '<div class="alert-banner">⚠️ Showing demo data. <strong>pm2 jlist</strong> output was sent to your terminal. Paste the JSON into a file and use pm2 import to manage processes.</div>';
+  window.zync.ssh.exec('pm2 jlist').then(function(output) {
+      try {
+          var trimmed = output.trim();
+          // pm2 jlist sometimes outputs warnings before JSON, try to find the array
+          var jsonStart = trimmed.indexOf('[');
+          if (jsonStart !== -1) {
+              trimmed = trimmed.substring(jsonStart);
+          }
+          
+          var data = JSON.parse(trimmed);
+          processes = data.map(function(p) {
+              return {
+                  name: p.name,
+                  pm_id: p.pm_id,
+                  status: p.pm2_env.status,
+                  cpu: p.monit ? p.monit.cpu : 0,
+                  memory: p.monit ? p.monit.memory : 0,
+                  restarts: p.pm2_env.restart_time,
+                  uptime: p.pm2_env.pm_uptime ? (new Date().getTime() - p.pm2_env.pm_uptime) : 0,
+                  pid: p.pid
+              };
+          });
+          document.getElementById('alert-area').innerHTML = '';
+          renderTable();
+      } catch (e) {
+          console.error('Failed to parse pm2 jlist', e, output);
+           document.getElementById('alert-area').innerHTML =
+            '<div class="alert-banner">⚠️ Error parsing process data. Is PM2 installed?</div>';
+          document.getElementById('table-container').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Parse Error</div></div>';
+      }
+  }).catch(function(err) {
+      console.error('SSH Exec Error:', err);
+      document.getElementById('alert-area').innerHTML =
+        '<div class="alert-banner">⚠️ Error executing PM2: ' + String(err) + '</div>';
+      document.getElementById('table-container').innerHTML = '';
+  });
 }
 
 function renderTable() {
