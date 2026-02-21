@@ -189,43 +189,77 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .log-btn-anchor { font-size: 10px; color: var(--accent); text-decoration: underline; cursor: pointer; }
-  .last-updated { font-size: 10px; color: var(--muted); }
-
-  /* Alert Banner */
-  .alert-banner {
-    margin: 10px 16px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    display: flex; align-items: center; gap: 8px;
-    border: 1px solid rgba(245,158,11,0.3);
-    background: rgba(245,158,11,0.08);
-    color: var(--yellow);
-  }
-
-  /* Search */
-  .search-input {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 5px 10px 5px 30px;
-    border-radius: 6px;
-    font-size: 12px;
-    width: 200px;
-    outline: none;
-    transition: border-color 0.2s;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: 8px center;
-  }
-  .search-input:focus { border-color: var(--accent); }
+  /* Checkboxes */
+  .checkbox { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); }
   
-  /* Disable State */
-  .btn:disabled { opacity: 0.5; pointer-events: none; }
+  /* Sortable Headers */
+  th.sortable { cursor: pointer; user-select: none; transition: color 0.15s; }
+  th.sortable:hover { color: var(--accent); }
+  th.sortable::after { content: "↕"; margin-left: 6px; font-size: 10px; opacity: 0.3; }
+  th.sort-asc::after { content: "↑"; opacity: 1; color: var(--accent); }
+  th.sort-desc::after { content: "↓"; opacity: 1; color: var(--accent); }
+
+  /* Context Menu */
+  .context-btn {
+    background: transparent; border: none; color: var(--muted); cursor: pointer;
+    padding: 2px 6px; border-radius: 4px; font-size: 14px; transition: all 0.2s;
+  }
+  .context-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+  
+  .context-menu {
+    position: absolute; right: 28px; top: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    padding: 4px; display: none; z-index: 100; min-width: 120px;
+  }
+  .context-menu.active { display: block; }
+  .context-menu-item {
+    display: block; width: 100%; text-align: left; padding: 6px 10px;
+    background: transparent; border: none; font-size: 11px;
+    color: var(--text); cursor: pointer; border-radius: 4px;
+  }
+  .context-menu-item:hover { background: rgba(255,255,255,0.05); color: var(--accent); }
+  .context-menu-item.danger:hover { color: var(--red); background: rgba(239,68,68,0.1); }
+
+  /* Bulk Actions Bar */
+  .bulk-bar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px;
+    display: flex; gap: 12px; align-items: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5); z-index: 200;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0; pointer-events: none; transform: translate(-50%, 20px);
+  }
+  .bulk-bar.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  .bulk-count { font-size: 12px; font-weight: 500; color: var(--text); border-right: 1px solid var(--border); padding-right: 12px; }
+
+  /* Inspector Modal */
+  .inspector-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 300; display: none; backdrop-filter: blur(2px);
+  }
+  .inspector-drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 400px;
+    background: var(--bg); border-left: 1px solid var(--border);
+    z-index: 310; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+  }
+  .inspector-drawer.open { transform: translateX(0); }
+  .inspector-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .inspector-title { font-size: 14px; font-weight: 500; }
+  .inspector-close { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+  .inspector-close:hover { color: var(--text); }
+  .inspector-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 12px; }
+  .inspector-body pre { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; color: var(--green); margin-top: 8px; }
+  .inspector-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .inspector-label { color: var(--muted); }
+  .inspector-val { font-family: 'JetBrains Mono', 'Fira Code', monospace; color: var(--text); }
+  .process-name-link { cursor: pointer; transition: color 0.15s; }
+  .process-name-link:hover { color: var(--accent); text-decoration: underline; }
 </style>
 </head>
-<body>
+<body onclick="closeAllContextMenus()">
 
 <div class="header">
   <div class="header-left">
@@ -273,12 +307,150 @@
   </div>
 </div>
 
+<!-- Bulk Actions Bar -->
+<div class="bulk-bar" id="bulk-bar">
+  <div class="bulk-count" id="bulk-count">0 Selected</div>
+  <button class="btn btn-sm" onclick="bulkAction('restart')">↺ Restart All</button>
+  <button class="btn btn-sm btn-danger" onclick="bulkAction('stop')">■ Stop All</button>
+  <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')">🗑 Delete All</button>
+</div>
+
+<!-- Inspector Drawer -->
+<div class="inspector-overlay" id="inspector-overlay" onclick="closeInspector()"></div>
+<div class="inspector-drawer" id="inspector-drawer">
+  <div class="inspector-header">
+    <div class="inspector-title" id="inspector-title">Process Details</div>
+    <button class="inspector-close" onclick="closeInspector()">×</button>
+  </div>
+  <div class="inspector-body" id="inspector-body">
+    Loading...
+  </div>
+</div>
+
 <script>
 var processes = [];
 var lastUpdated = null;
+var sortCol = 'name';
+var sortAsc = true;
+var selectedItems = [];
 
 function runCmd(cmd) {
   return window.zync.ssh.exec(cmd);
+}
+
+// Helpers
+function escapeHtml(unsafe) {
+    return (unsafe || '').toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
+function closeAllContextMenus() {
+  var menus = document.querySelectorAll('.context-menu');
+  menus.forEach(function(m) { m.classList.remove('active'); });
+}
+
+function toggleMenu(e, id) {
+  e.stopPropagation();
+  closeAllContextMenus();
+  var menu = document.getElementById('menu-' + id);
+  if (menu) menu.classList.toggle('active');
+}
+
+// Sorting logic
+function setSort(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  renderTable();
+}
+
+function getSortClass(col) {
+  if (sortCol !== col) return '';
+  return sortAsc ? 'sort-asc' : 'sort-desc';
+}
+
+// Selection logic
+function toggleSelectAll(e) {
+  if (e.target.checked) {
+    selectedItems = processes.map(function(p) { return p.name; });
+  } else {
+    selectedItems = [];
+  }
+  renderTable();
+}
+
+function toggleSelect(e, name) {
+  e.stopPropagation();
+  if (e.target.checked) selectedItems.push(name);
+  else selectedItems = selectedItems.filter(function(n) { return n !== name; });
+  renderTable();
+}
+
+// Inspector Logic
+function openInspector(name) {
+  var p = processes.find(function(proc) { return proc.name === name; });
+  if (!p) return;
+  document.getElementById('inspector-overlay').style.display = 'block';
+  setTimeout(function() { document.getElementById('inspector-drawer').classList.add('open'); }, 10);
+  document.getElementById('inspector-title').textContent = p.name;
+  
+  var html = '';
+  html += '<div class="inspector-row"><span class="inspector-label">Status</span><span class="inspector-val ' + statusClass(p.status) + '">' + p.status + '</span></div>';
+  html += '<div class="inspector-row"><span class="inspector-label">PM2 ID</span><span class="inspector-val">' + p.pm_id + '</span></div>';
+  html += '<div class="inspector-row"><span class="inspector-label">PID</span><span class="inspector-val">' + (p.pid || 'N/A') + '</span></div>';
+  html += '<div class="inspector-row"><span class="inspector-label">CPU</span><span class="inspector-val">' + p.cpu + '%</span></div>';
+  html += '<div class="inspector-row"><span class="inspector-label">Memory</span><span class="inspector-val">' + formatMemory(p.memory) + '</span></div>';
+  html += '<div class="inspector-row"><span class="inspector-label">Restarts</span><span class="inspector-val">' + p.restarts + '</span></div>';
+  
+  if (p.raw && p.raw.pm2_env) {
+    html += '<div class="inspector-row"><span class="inspector-label">Node Version</span><span class="inspector-val">' + (p.raw.pm2_env.node_version || 'Unknown') + '</span></div>';
+    html += '<div class="inspector-row"><span class="inspector-label">Script Path</span><span class="inspector-val" style="font-size:10px;text-align:right">' + (p.raw.pm2_env.pm_exec_path || 'Unknown') + '</span></div>';
+    html += '<div class="inspector-row"><span class="inspector-label">Exec Mode</span><span class="inspector-val">' + (p.raw.pm2_env.exec_mode || 'Unknown') + '</span></div>';
+    html += '<h4 style="margin:16px 0 8px">Environment Variables</h4>';
+    var envStr = '';
+    for (var key in (p.raw.pm2_env.env || {})) {
+      envStr += key + '=' + p.raw.pm2_env.env[key] + '\\n';
+    }
+    if (envStr) html += '<pre>' + escapeHtml(envStr) + '</pre>';
+    else html += '<div class="inspector-label">No custom environment variables found.</div>';
+  }
+  
+  document.getElementById('inspector-body').innerHTML = html;
+}
+
+function closeInspector() {
+  document.getElementById('inspector-drawer').classList.remove('open');
+  setTimeout(function() { document.getElementById('inspector-overlay').style.display = 'none'; }, 300);
+}
+
+// Bulk Actions
+async function bulkAction(action) {
+  if (selectedItems.length === 0) return;
+  const verb = action === 'delete' ? 'Delete' : (action === 'stop' ? 'Stop' : 'Restart');
+  const confirmed = await window.zync.ui.confirm({
+    title: verb + ' Multiple Processes',
+    message: 'Are you sure you want to ' + action + ' ' + selectedItems.length + ' processes?',
+    variant: action === 'restart' ? 'primary' : 'danger',
+    confirmText: verb
+  });
+  if (confirmed) {
+    var promises = selectedItems.map(function(name) {
+      updateProcessStateLocally(name, action === 'delete' ? 'deleting...' : (action === 'stop' ? 'stopping...' : 'launching...'));
+      return runCmd('pm2 ' + action + ' ' + name);
+    });
+    window.zync.ui.notify({ type: 'info', body: verb + 'ing ' + selectedItems.length + ' processes...' });
+    
+    // Clear selection aggressively, refetch later
+    selectedItems = [];
+    renderTable();
+    
+    Promise.all(promises).then(function() {
+      setTimeout(fetchProcesses, 3000);
+    });
+  }
 }
 
 // Helper for Optimistic UI Updates
@@ -291,6 +463,7 @@ function updateProcessStateLocally(name, pseudoStatus) {
 }
 
 async function restartProcess(name) {
+  closeAllContextMenus();
   const confirmed = await window.zync.ui.confirm({
     title: 'Restart Process',
     message: 'Are you sure you want to restart ' + name + '?'
@@ -304,6 +477,7 @@ async function restartProcess(name) {
 }
 
 async function stopProcess(name) {
+  closeAllContextMenus();
   const confirmed = await window.zync.ui.confirm({
     title: 'Stop Process',
     message: 'Are you sure you want to stop ' + name + '?',
@@ -318,6 +492,7 @@ async function stopProcess(name) {
 }
 
 async function deleteProcess(name) {
+  closeAllContextMenus();
   const confirmed = await window.zync.ui.confirm({
     title: 'Delete Process',
     message: 'Delete ' + name + ' from PM2? This cannot be undone.',
@@ -333,6 +508,7 @@ async function deleteProcess(name) {
 }
 
 function startProcess(name) {
+  closeAllContextMenus();
   updateProcessStateLocally(name, 'launching...');
   runCmd('pm2 start ' + name);
   window.zync.ui.notify({ type: 'info', body: 'Starting ' + name + '...' });
@@ -340,6 +516,7 @@ function startProcess(name) {
 }
 
 function viewLogs(name) {
+  closeAllContextMenus();
   window.zync.terminal.newTab({ command: 'pm2 logs ' + name + ' --lines 50\\n' });
   window.zync.ui.notify({ type: 'success', body: 'Opening logs for ' + name + ' in new Terminal tab.' });
 }
@@ -399,7 +576,8 @@ function fetchProcesses() {
                   memory: p.monit ? p.monit.memory : 0,
                   restarts: p.pm2_env.restart_time,
                   uptime: p.pm2_env.pm_uptime ? (new Date().getTime() - p.pm2_env.pm_uptime) : 0,
-                  pid: p.pid
+                  pid: p.pid,
+                  raw: p // Store full obj for inspector
               };
           });
           document.getElementById('alert-area').innerHTML = '';
@@ -442,10 +620,32 @@ function renderTable() {
   window.zync.statusBar.set('pm2-monitor',
     '⚡ PM2: ' + online + '↑ ' + stopped + '↓ ' + errored + '⚠'
   );
+  
+  // Bulk actions bar visibility
+  var bulkBar = document.getElementById('bulk-bar');
+  if (bulkBar) {
+    if (selectedItems.length > 0) {
+      bulkBar.classList.add('visible');
+      document.getElementById('bulk-count').textContent = selectedItems.length + ' Selected';
+    } else {
+      bulkBar.classList.remove('visible');
+    }
+  }
 
   var searchTerm = (document.getElementById('search-box').value || '').toLowerCase();
+  
+  // Apply Search
   var filteredProcesses = processes.filter(function(p) {
     return p.name.toLowerCase().indexOf(searchTerm) > -1;
+  });
+  
+  // Apply Sort
+  filteredProcesses.sort(function(a, b) {
+    var valA = a[sortCol];
+    var valB = b[sortCol];
+    if (valA < valB) return sortAsc ? -1 : 1;
+    if (valA > valB) return sortAsc ? 1 : -1;
+    return 0;
   });
 
   if (processes.length === 0) {
@@ -459,14 +659,32 @@ function renderTable() {
       '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">No processes match your search query.</div></div>';
     return;
   }
+  
+  var allSelected = filteredProcesses.length > 0 && filteredProcesses.every(function(p) { return selectedItems.includes(p.name); });
 
   var rows = filteredProcesses.map(function(p) {
     // Disable buttons if status is a pseudo-state (optimistic UI)
     var isPending = p.status.endsWith('...');
+    var isSelected = selectedItems.includes(p.name);
+    
+    var contextMenuHtml = 
+      '<div style="position:relative">' +
+        '<button class="context-btn" ' + (isPending ? 'disabled' : '') + ' onclick="toggleMenu(event, \'' + p.pm_id + '\')">⋮</button>' +
+        '<div class="context-menu" id="menu-' + p.pm_id + '">' +
+          (p.status === 'online' 
+            ? '<button class="context-menu-item" onclick="restartProcess(\'' + escapeHtml(p.name) + '\')">↺ Restart</button>' +
+              '<button class="context-menu-item" onclick="stopProcess(\'' + escapeHtml(p.name) + '\')">■ Stop</button>'
+            : '<button class="context-menu-item" onclick="startProcess(\'' + escapeHtml(p.name) + '\')">▶ Start</button>') +
+          '<hr style="border:none;border-top:1px solid var(--border);margin:4px 0">' +
+          '<button class="context-menu-item" onclick="viewLogs(\'' + escapeHtml(p.name) + '\')">📜 Logs</button>' +
+          '<button class="context-menu-item danger" onclick="deleteProcess(\'' + escapeHtml(p.name) + '\')">🗑 Delete</button>' +
+        '</div>' +
+      '</div>';
     
     return '<tr>' +
+      '<td style="width: 30px;"><input type="checkbox" class="checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="toggleSelect(event, \'' + escapeHtml(p.name) + '\')"></td>' +
       '<td>' +
-        '<div class="process-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="process-name process-name-link" onclick="openInspector(\'' + escapeHtml(p.name) + '\')">' + escapeHtml(p.name) + '</div>' +
         '<div class="process-id">id:' + p.pm_id + (p.pid ? ' · pid:' + p.pid : '') + '</div>' +
       '</td>' +
       '<td><span class="status-dot ' + statusClass(p.status) + '">' + p.status + '</span></td>' +
@@ -474,37 +692,25 @@ function renderTable() {
       '<td><span class="metric">' + formatMemory(p.memory) + '</span></td>' +
       '<td><span class="metric">' + p.restarts + '</span></td>' +
       '<td class="metric">' + (p.status === 'online' ? formatUptime(p.uptime) : '—') + '</td>' +
-      '<td>' +
-        '<div class="actions">' +
-        (p.status === 'online'
-          ? '<button class="btn btn-sm" ' + (isPending ? 'disabled' : '') + ' onclick="restartProcess(&apos;' + escapeHtml(p.name) + '&apos;)">↺ Restart</button>' +
-            '<button class="btn btn-sm btn-danger" ' + (isPending ? 'disabled' : '') + ' onclick="stopProcess(&apos;' + escapeHtml(p.name) + '&apos;)">■ Stop</button>'
-          : '<button class="btn btn-sm btn-accent" ' + (isPending ? 'disabled' : '') + ' onclick="startProcess(&apos;' + escapeHtml(p.name) + '&apos;)">▶ Start</button>') +
-        '<button class="btn btn-sm" onclick="viewLogs(&apos;' + escapeHtml(p.name) + '&apos;)">📜 Logs</button>' +
-        '<button class="btn btn-sm btn-danger" ' + (isPending ? 'disabled' : '') + ' onclick="deleteProcess(&apos;' + escapeHtml(p.name) + '&apos;)">🗑</button>' +
-        '</div>' +
-      '</td>' +
+      '<td style="text-align:right;">' + contextMenuHtml + '</td>' +
     '</tr>';
-  }).join('');
+  });
 
-  document.getElementById('table-container').innerHTML =
-    '<table>' +
-      '<thead><tr>' +
-        '<th>Process</th>' +
-        '<th>Status</th>' +
-        '<th>CPU</th>' +
-        '<th>Memory</th>' +
-        '<th>↺ Restarts</th>' +
-        '<th>Uptime</th>' +
-        '<th>Actions</th>' +
-      '</tr></thead>' +
-      '<tbody>' + rows + '</tbody>' +
-    '</table>';
-}
+  var tableHtml = '<table>' +
+    '<thead><tr>' +
+      '<th style="width: 30px;"><input type="checkbox" class="checkbox" ' + (allSelected ? 'checked' : '') + ' onclick="toggleSelectAll(event)"></th>' +
+      '<th class="sortable ' + getSortClass('name') + '" onclick="setSort(\'name\')">Process</th>' +
+      '<th class="sortable ' + getSortClass('status') + '" onclick="setSort(\'status\')">Status</th>' +
+      '<th class="sortable ' + getSortClass('cpu') + '" onclick="setSort(\'cpu\')">CPU</th>' +
+      '<th class="sortable ' + getSortClass('memory') + '" onclick="setSort(\'memory\')">Memory</th>' +
+      '<th class="sortable ' + getSortClass('restarts') + '" onclick="setSort(\'restarts\')">↺</th>' +
+      '<th class="sortable ' + getSortClass('uptime') + '" onclick="setSort(\'uptime\')">Uptime</th>' +
+      '<th style="text-align:right;">Actions</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows.join('') + '</tbody>' +
+  '</table>';
 
-function escapeHtml(str) {
-  str = String(str);
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  document.getElementById('table-container').innerHTML = tableHtml;
 }
 
 // Auto-Load on Startup
