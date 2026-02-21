@@ -192,6 +192,7 @@
   .log-btn-anchor { font-size: 10px; color: var(--accent); text-decoration: underline; cursor: pointer; }
   .last-updated { font-size: 10px; color: var(--muted); }
 
+  /* Alert Banner */
   .alert-banner {
     margin: 10px 16px;
     padding: 8px 12px;
@@ -202,6 +203,26 @@
     background: rgba(245,158,11,0.08);
     color: var(--yellow);
   }
+
+  /* Search */
+  .search-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px 5px 30px;
+    border-radius: 6px;
+    font-size: 12px;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 8px center;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  
+  /* Disable State */
+  .btn:disabled { opacity: 0.5; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -215,8 +236,9 @@
     </div>
   </div>
   <div class="header-actions">
+    <input type="text" id="search-box" class="search-input" placeholder="Search processes..." oninput="filterTable()" />
     <span class="badge" id="process-count-badge">Loading…</span>
-    <button class="btn btn-accent" onclick="fetchProcesses()">⟳ Refresh</button>
+    <button class="btn btn-accent" id="refresh-btn" onclick="fetchProcesses()">⟳ Refresh</button>
     <button class="btn" onclick="runCmd('pm2 save')">💾 Save</button>
   </div>
 </div>
@@ -245,10 +267,8 @@
 <div class="table-wrap">
   <div id="table-container">
     <div class="empty-state">
-      <div class="empty-icon">🖥️</div>
-      <div class="empty-title">No data yet</div>
-      <div class="empty-sub">Click <strong>Load Processes</strong> to fetch data from the server.</div>
-      <button class="btn btn-accent" style="margin-top:8px" onclick="fetchProcesses()">⟳ Load Processes</button>
+      <div class="spinner"></div>
+      <div class="empty-sub" style="margin-top:12px">Connecting to PM2...</div>
     </div>
   </div>
 </div>
@@ -261,12 +281,22 @@ function runCmd(cmd) {
   window.zync.terminal.send(cmd + '\\n');
 }
 
+// Helper for Optimistic UI Updates
+function updateProcessStateLocally(name, pseudoStatus) {
+  var p = processes.find(function(proc) { return proc.name === name; });
+  if (p) {
+    p.status = pseudoStatus; // e.g. "stopping...", "launching..."
+    renderTable();
+  }
+}
+
 async function restartProcess(name) {
   const confirmed = await window.zync.ui.confirm({
     title: 'Restart Process',
     message: 'Are you sure you want to restart ' + name + '?'
   });
   if (confirmed) {
+    updateProcessStateLocally(name, 'launching...');
     runCmd('pm2 restart ' + name);
     window.zync.ui.notify({ type: 'info', body: 'Restarting ' + name + '...' });
     setTimeout(fetchProcesses, 2000);
@@ -280,9 +310,10 @@ async function stopProcess(name) {
     variant: 'danger'
   });
   if (confirmed) {
+    updateProcessStateLocally(name, 'stopping...');
     runCmd('pm2 stop ' + name);
     window.zync.ui.notify({ type: 'info', body: 'Stopping ' + name + '...' });
-    setTimeout(fetchProcesses, 2000);
+    setTimeout(fetchProcesses, 3000);
   }
 }
 
@@ -294,20 +325,23 @@ async function deleteProcess(name) {
     confirmText: 'Delete'
   });
   if (confirmed) {
+    updateProcessStateLocally(name, 'deleting...');
     runCmd('pm2 delete ' + name);
     window.zync.ui.notify({ type: 'warning', body: 'Deleted ' + name + ' from PM2' });
-    setTimeout(fetchProcesses, 2000);
+    setTimeout(fetchProcesses, 3000);
   }
 }
 
 function startProcess(name) {
+  updateProcessStateLocally(name, 'launching...');
   runCmd('pm2 start ' + name);
   window.zync.ui.notify({ type: 'info', body: 'Starting ' + name + '...' });
   setTimeout(fetchProcesses, 2000);
 }
 
 function viewLogs(name) {
-  runCmd('pm2 logs ' + name + ' --lines 50');
+  window.parent.postMessage({ type: 'zync:terminal:opentab', payload: { command: 'pm2 logs ' + name + ' --lines 50\\n' } }, '*');
+  window.zync.ui.notify({ type: 'success', body: 'Opening logs for ' + name + ' in new Terminal tab.' });
 }
 
 function formatUptime(ms) {
@@ -338,13 +372,13 @@ function statusClass(status) {
   if (status === 'online') return 'status-online';
   if (status === 'stopped') return 'status-stopped';
   if (status === 'errored') return 'status-errored';
+  // Fallback for "stopping...", "launching...", etc.
   return 'status-launching';
 }
 
 function fetchProcesses() {
-  var container = document.getElementById('table-container');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div> Fetching processes...</div>';
-  document.getElementById('process-count-badge').textContent = 'Loading…';
+  document.getElementById('refresh-btn').disabled = true;
+  document.getElementById('refresh-btn').textContent = 'Loading...';
 
   window.zync.ssh.exec('pm2 jlist').then(function(output) {
       try {
@@ -381,7 +415,14 @@ function fetchProcesses() {
       document.getElementById('alert-area').innerHTML =
         '<div class="alert-banner">⚠️ Error executing PM2: ' + String(err) + '</div>';
       document.getElementById('table-container').innerHTML = '';
+  }).finally(function() {
+      document.getElementById('refresh-btn').disabled = false;
+      document.getElementById('refresh-btn').textContent = '⟳ Refresh';
   });
+}
+
+function filterTable() {
+  renderTable();
 }
 
 function renderTable() {
@@ -402,13 +443,27 @@ function renderTable() {
     '⚡ PM2: ' + online + '↑ ' + stopped + '↓ ' + errored + '⚠'
   );
 
+  var searchTerm = (document.getElementById('search-box').value || '').toLowerCase();
+  var filteredProcesses = processes.filter(function(p) {
+    return p.name.toLowerCase().indexOf(searchTerm) > -1;
+  });
+
   if (processes.length === 0) {
     document.getElementById('table-container').innerHTML =
       '<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">No processes found</div><div class="empty-sub">No PM2 processes are currently running on this server.</div></div>';
     return;
   }
+  
+  if (filteredProcesses.length === 0) {
+    document.getElementById('table-container').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No matches</div><div class="empty-sub">No processes match your search query.</div></div>';
+    return;
+  }
 
-  var rows = processes.map(function(p) {
+  var rows = filteredProcesses.map(function(p) {
+    // Disable buttons if status is a pseudo-state (optimistic UI)
+    var isPending = p.status.endsWith('...');
+    
     return '<tr>' +
       '<td>' +
         '<div class="process-name">' + escapeHtml(p.name) + '</div>' +
@@ -422,11 +477,11 @@ function renderTable() {
       '<td>' +
         '<div class="actions">' +
         (p.status === 'online'
-          ? '<button class="btn btn-sm" onclick="restartProcess(\'' + escapeHtml(p.name) + '\')">↺ Restart</button>' +
-            '<button class="btn btn-sm btn-danger" onclick="stopProcess(\'' + escapeHtml(p.name) + '\')">■ Stop</button>'
-          : '<button class="btn btn-sm btn-accent" onclick="startProcess(\'' + escapeHtml(p.name) + '\')">▶ Start</button>') +
-        '<button class="btn btn-sm" onclick="viewLogs(\'' + escapeHtml(p.name) + '\')">📜 Logs</button>' +
-        '<button class="btn btn-sm btn-danger" onclick="deleteProcess(\'' + escapeHtml(p.name) + '\')">🗑</button>' +
+          ? '<button class="btn btn-sm" ' + (isPending ? 'disabled' : '') + ' onclick="restartProcess(&apos;' + escapeHtml(p.name) + '&apos;)">↺ Restart</button>' +
+            '<button class="btn btn-sm btn-danger" ' + (isPending ? 'disabled' : '') + ' onclick="stopProcess(&apos;' + escapeHtml(p.name) + '&apos;)">■ Stop</button>'
+          : '<button class="btn btn-sm btn-accent" ' + (isPending ? 'disabled' : '') + ' onclick="startProcess(&apos;' + escapeHtml(p.name) + '&apos;)">▶ Start</button>') +
+        '<button class="btn btn-sm" onclick="viewLogs(&apos;' + escapeHtml(p.name) + '&apos;)">📜 Logs</button>' +
+        '<button class="btn btn-sm btn-danger" ' + (isPending ? 'disabled' : '') + ' onclick="deleteProcess(&apos;' + escapeHtml(p.name) + '&apos;)">🗑</button>' +
         '</div>' +
       '</td>' +
     '</tr>';
@@ -439,7 +494,7 @@ function renderTable() {
         '<th>Status</th>' +
         '<th>CPU</th>' +
         '<th>Memory</th>' +
-        '<th>Restarts</th>' +
+        '<th>↺ Restarts</th>' +
         '<th>Uptime</th>' +
         '<th>Actions</th>' +
       '</tr></thead>' +
@@ -452,10 +507,8 @@ function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Auto-refresh every 30s
-setInterval(function() {
-  if (processes.length > 0) fetchProcesses();
-}, 30000);
+// Auto-Load on Startup
+setTimeout(fetchProcesses, 100);
 </script>
 </body>
 </html>`;
